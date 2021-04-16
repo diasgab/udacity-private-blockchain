@@ -37,24 +37,31 @@ class Block {
      */
     validate() {
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             // Save in auxiliary variable the current block hash
-            const currentHash = this.hash;
+            const currentHash = self.hash;
                                             
             // Recalculate the hash of the Block
-            const newHash = SHA256(JSON.stringify(self)).toString();
+            const newHash = await self.createNewHash();
 
-            // Comparing if the hashes changed
-            if (currentHash != newHash) {
-                // Returning the Block is not valid
-                resolve(false);
-            } else {
-                // Returning the Block is valid
-                resolve(true);
-            }            
+            // Resolve true or false depending if it is valid or not
+            resolve(currentHash == newHash);         
         });
     }
 
+    /**
+     * Utility method to create a hash async
+     */
+    createNewHash() {
+        let self = this;
+        return new Promise((resolve, reject) => {
+            resolve(SHA256(JSON.stringify(self)).toString());
+        });
+    }
+
+    /**
+     * Utility method to check if the block is the genesis one
+     */
     isGenesis() {
         return this.height == 0;
     }
@@ -71,20 +78,22 @@ class Block {
     getBData() {
         let self = this;
         return new Promise((resolve, reject) => {
-            // Getting the encoded data saved in the Block
-            const data = self.body;
-    
-            // Decoding the data to retrieve the JSON representation of the object
-            var dataHexDecode = new Buffer(data, 'hex');
-    
-            // Parse the data to an object to be retrieve.
-            var obj = JSON.parse(dataHexDecode);
-    
-            // Resolve with the data if the object isn't the Genesis block
             if (!this.isGenesis()) {
-                resolve(obj.data);
-            } else {
-                reject(Error('It broke'))
+                // Getting the encoded data saved in the Block
+                const data = self.body;
+        
+                // Decoding the data to retrieve the JSON representation of the object
+                var dataHexDecode = hex2ascii(data);
+        
+                // Parse the data to an object to be retrieve.
+                var obj = JSON.parse(dataHexDecode);
+        
+                // Resolve with the data if the object isn't the Genesis block
+                if (obj.data) {
+                    resolve(obj.data);
+                } else {
+                    reject('It broke');
+                }
             }
         });
     }
