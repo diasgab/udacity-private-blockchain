@@ -81,8 +81,14 @@ class Blockchain {
 
                 self.chain.push(newBlock);
                 self.height++;
-    
-                resolve(newBlock);
+
+                // execute the validateChain() function every time a block is added
+                if (!self.validateChain()) {
+                    self.removeBlock()
+                    reject('Invalid Chain');        
+                } else {
+                    resolve(newBlock);
+                }
             }
         });
     }
@@ -135,13 +141,7 @@ class Blockchain {
                 } else {
                     if (star.dec && star.ra && star.story) {
                         let block = new BlockClass.Block({data: {'owner': address, 'star': star}});
-                        this._addBlock(block);
-        
-                        // execute the validateChain() function every time a block is added
-                        if (!this.validateChain()) {
-                            self.removeBlock()
-                            reject('Invalid Chain');        
-                        }
+                        await this._addBlock(block);
         
                         resolve(block);
                     } else {
@@ -166,7 +166,7 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-            let block = self.chain.filter(p => p.hash === hash)[0];
+            let block = self.chain.find(p => p.hash === hash);
             if (block){
                 resolve(block);
             } else {
@@ -226,7 +226,8 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             for (const block of self.chain) {
-                if (!block.validate()) {
+                let isValid = await block.validate();
+                if (!isValid) {
                     errorLog.push(`Invalid block ${block.hash}`);
                 }
 

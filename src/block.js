@@ -40,12 +40,12 @@ class Block {
         return new Promise(async (resolve, reject) => {
             // Save in auxiliary variable the current block hash
             const currentHash = self.hash;
-                                            
+
             // Recalculate the hash of the Block
-            const newHash = await self.createNewHash();
+            let newHash = await self.createNewHash();
 
             // Resolve true or false depending if it is valid or not
-            resolve(currentHash == newHash);         
+            resolve(currentHash == newHash);
         });
     }
 
@@ -54,8 +54,11 @@ class Block {
      */
     createNewHash() {
         let self = this;
-        return new Promise((resolve, reject) => {
-            resolve(SHA256(JSON.stringify(self)).toString());
+        return new Promise(async (resolve, reject) => {
+            const originalBlock = Object.assign({}, self);
+            originalBlock.hash = null;
+
+            resolve(SHA256(JSON.stringify(originalBlock)).toString());
         });
     }
 
