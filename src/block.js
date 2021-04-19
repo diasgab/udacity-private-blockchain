@@ -55,7 +55,7 @@ class Block {
     createNewHash() {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            const originalBlock = Object.assign({}, self);
+            const originalBlock = { ...self };
             originalBlock.hash = null;
 
             resolve(SHA256(JSON.stringify(originalBlock)).toString());
